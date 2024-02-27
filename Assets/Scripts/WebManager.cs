@@ -10,10 +10,10 @@ public class WebManager : MonoBehaviour
     private readonly string urlServer = "https://65d6faa927d9a3bc1d79cece.mockapi.io/v1/buttons";
     [SerializeField] private ScrollViewController _scrollViewController;
     [SerializeField] private PopupController popupController;
-
+    [SerializeField] private FlyText prefabFlyText;
+    [SerializeField] private Transform posFlyText;
     public void StartGet()
     {
-        popupController.HidePopup();
         StartCoroutine(GetRequest());
     }
 
@@ -25,17 +25,15 @@ public class WebManager : MonoBehaviour
 
     public void StartDelete()
     {
-        popupController.HidePopup();
         StartCoroutine(DeleteRequest());
     }
 
     public void StartPut()
     {
-        popupController.HidePopup();
         int id = _scrollViewController.TryGetInt(popupController.GetTextInputField());
-        if (id > 0)
+        if (id > 0 && _scrollViewController.Items.ContainsKey(id))
         {
-            var da = _scrollViewController.Items[id].modelData;
+            var da = _scrollViewController.Items[id]?.modelData;
             var data = new
             {
                 animationType = da.animationType
@@ -44,6 +42,10 @@ public class WebManager : MonoBehaviour
             string jsonData = JsonConvert.SerializeObject(data);
 
             StartCoroutine(PutRequest(jsonData));
+        }
+        else
+        {
+            CallFlyText("PutRequest Not found id: " + id);
         }
     }
 
@@ -56,11 +58,11 @@ public class WebManager : MonoBehaviour
             fixUrl = urlServer + "/" + id;
         }
         UnityWebRequest uwr = UnityWebRequest.Get(fixUrl);
-        Debug.Log("GetRequest fixUrl " + fixUrl);
         yield return uwr.SendWebRequest();
 
         if (uwr.result == UnityWebRequest.Result.ConnectionError)
         {
+            CallFlyText("ConnectionError " + uwr.error);
             Debug.LogError("Error While Sending: " + uwr.error);
         }
         else
@@ -69,17 +71,22 @@ public class WebManager : MonoBehaviour
             if (result.Contains("Not found"))
             {
                 _scrollViewController.RemoveButtonById(id);
-                Debug.Log("GetRequest Not found id: " + id);
+                CallFlyText("GetRequest Not found id: " + id);
                 yield break;
             }
-
+            
             string fixJson = "";
             if (!string.IsNullOrEmpty(id))
+            {
                 fixJson = "[" + result + "]";
+                CallFlyText("GetRequest ok id: " + id);
+            }
             else
+            {
                 fixJson = result;
-            
-            Debug.Log("GetRequest ok ");
+                CallFlyText("GetRequest All ok");
+            }
+
             ListViewModel[] listViewModels = JsonConvert.DeserializeObject<ListViewModel[]>(fixJson);
             if (!string.IsNullOrEmpty(id))
                 _scrollViewController.UpdateById(id, listViewModels?[0]);
@@ -94,13 +101,17 @@ public class WebManager : MonoBehaviour
         byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes("");
         uwr.uploadHandler = (UploadHandler) new UploadHandlerRaw(jsonToSend);
         uwr.SetRequestHeader("Content-Type", "application/json");
-
-        //Send the request then wait here until it returns
+        
         yield return uwr.SendWebRequest();
 
         if (uwr.result == UnityWebRequest.Result.ConnectionError)
         {
+            CallFlyText("ConnectionError " + uwr.error);
             Debug.LogError("Error While Sending: " + uwr.error);
+        }
+        else
+        {
+            CallFlyText("PostRequest ok");
         }
     }
 
@@ -112,22 +123,26 @@ public class WebManager : MonoBehaviour
         {
             fixUrl = urlServer + "/" + id;
         }
-        
-        
-        
+
         UnityWebRequest uwr = UnityWebRequest.Put(fixUrl, json);
-        Debug.Log("PutRequest: " + fixUrl + " " + json);
         uwr.SetRequestHeader("Content-Type", "application/json");
 
         yield return uwr.SendWebRequest();
 
         if (uwr.result == UnityWebRequest.Result.ConnectionError)
         {
+            CallFlyText("ConnectionError " + uwr.error);
             Debug.LogError("Error While Sending: " + uwr.error);
         }
         else
         {
-            Debug.Log("Received: " + uwr.downloadHandler.text);
+            string result = uwr.downloadHandler.text;
+            if (result.Contains("Not found"))
+            {
+                CallFlyText("PutRequest Not found id: " + id);
+            }
+            else
+                CallFlyText("PutRequest ok " + id);
         }
     }
 
@@ -145,11 +160,18 @@ public class WebManager : MonoBehaviour
 
         if (uwr.result == UnityWebRequest.Result.ConnectionError)
         {
+            CallFlyText("ConnectionError " + uwr.error);
             Debug.LogError("Error While Sending: " + uwr.error);
         }
         else
         {
-            Debug.Log("Deleted id: " + id);
+            CallFlyText("Deleted id: " + id);
+            //Debug.Log("Deleted id: " + id);
         }
+    }
+
+    public void CallFlyText(string text)
+    {
+        Instantiate(prefabFlyText, posFlyText.position, Quaternion.identity, posFlyText).Fly(text);
     }
 }
