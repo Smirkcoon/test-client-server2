@@ -11,6 +11,11 @@ public class ScrollViewController : MonoBehaviour
 
     [SerializeField] private Transform content;
     [SerializeField] private ListViewItem prefab;
+    [SerializeField] private PopupController popupController;
+    private void Start()
+    {
+        prefab.transform.DOScale(0, 0);
+    }
 
     public ListViewItem[] GetArray()
     {
@@ -19,25 +24,26 @@ public class ScrollViewController : MonoBehaviour
 
     public void AddItemWithData(ListViewModel[] itemsModels)
     {
-        for (int i = 0; i < itemsModels.Length; i++)
+        StartCoroutine(CreateItemsWithDelay(itemsModels));
+    }
+
+    IEnumerator CreateItemsWithDelay(ListViewModel[] itemsModels)
+    {
+        foreach (ListViewModel itemModel in itemsModels)
         {
-            int x = i;
-            if (Items.Keys.Contains(itemsModels[i].id))
+            if (Items.ContainsKey(itemModel.id))
                 continue;
 
-            Sequence s = DOTween.Sequence();
-            s.AppendInterval(i* 1.0f/10);
-            s.OnComplete(() =>
-            {
-                if (Items.Keys.Contains(itemsModels[x].id))
-                    return;
-                var newItem = Instantiate(prefab, content);
-                Items.Add(itemsModels[x].id, newItem);
-                newItem.Setup(itemsModels[x]);
-                newItem.transform.DOScale(1, 0.2f);
-            });
+            var newItem = Instantiate(prefab, content);
+            Items.Add(itemModel.id, newItem);
+            newItem.Setup(itemModel);
+            newItem.transform.DOScale(1, 0.2f);
+            newItem.btn.onClick.AddListener(()=> popupController.idInputField.text = newItem.modelData.id.ToString());
+            yield return new WaitForSeconds(0.1f); // Задержка между созданием элементов
         }
-        if(itemsModels.Length>1)
+
+        // Проверяем на удаление объектов
+        if (itemsModels.Length > 1)
             CheckForRemove(itemsModels);
     }
     public void UpdateById(string id, ListViewModel itemModel)
@@ -81,8 +87,13 @@ public class ScrollViewController : MonoBehaviour
     {
         if (id >= 0 && Items.Keys.Contains(id))
         {
-            Destroy(Items[id].gameObject);
-            Items.Remove(id);
+            Items[id].transform.DOScale(0, 0.2f)
+                .OnComplete(() =>
+                {
+                    Items[id].btn.onClick.RemoveAllListeners();
+                    Destroy(Items[id].gameObject);
+                    Items.Remove(id);
+                });
         }
         else
             Debug.LogError("Remove Button Not Correct id");

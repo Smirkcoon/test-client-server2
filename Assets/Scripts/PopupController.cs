@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class PopupController : MonoBehaviour
 {
+    public TMP_InputField idInputField;
     [SerializeField] private GameObject popupPanel;
-    [SerializeField] private TMP_InputField idInputField;
     [SerializeField] private float animationDuration = 0.2f;
     [SerializeField] private float appearScale = 1.2f;
    

@@ -374,6 +374,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   content: {fileID: 1067233295}
   prefab: {fileID: 114902774218754230, guid: dd93cea32564a38449f2c7c790ec9b10, type: 3}
+  popupController: {fileID: 1025034932}
 --- !u!1 &318502893
 GameObject:
   m_ObjectHideFlags: 0
@@ -1431,8 +1432,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bc0173df8525134f9163610255be361, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  popupPanel: {fileID: 2111081595}
   idInputField: {fileID: 1983174773}
+  popupPanel: {fileID: 2111081595}
   animationDuration: 0.2
   appearScale: 1.2
   Opened: 0

@@ -12,6 +12,7 @@ public class ListViewItem : MonoBehaviour
     [SerializeField] private Toggle animationType;
     [SerializeField] private TMP_Text textName;
     [SerializeField] private Image image;
+    public Button btn;
     [HideInInspector]
     public ListViewModel modelData;
 
