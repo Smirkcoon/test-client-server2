@@ -37,12 +37,17 @@ public class ScrollViewController : MonoBehaviour
                 newItem.transform.DOScale(1, 0.2f);
             });
         }
-
-        CheckForRemove(itemsModels);
+        if(itemsModels.Length>1)
+            CheckForRemove(itemsModels);
     }
-    public void UpdateById(string id, ListViewModel itemsModel)
+    public void UpdateById(string id, ListViewModel itemModel)
     {
-        Items[TryGetInt(id)].Setup(itemsModel);
+        if(Items.ContainsKey(TryGetInt(id)))
+            Items[TryGetInt(id)].Setup(itemModel);
+        else
+        {
+            AddItemWithData(new ListViewModel[] { itemModel });
+        }
     }
     private void CheckForRemove(ListViewModel[] itemsModels)
     {
