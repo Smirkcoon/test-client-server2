@@ -38,7 +38,11 @@ public class ScrollViewController : MonoBehaviour
             Items.Add(itemModel.id, newItem);
             newItem.Setup(itemModel);
             newItem.transform.DOScale(1, 0.2f);
-            newItem.btn.onClick.AddListener(()=> popupController.idInputField.text = newItem.modelData.id.ToString());
+            newItem.btn.onClick.AddListener(() =>
+            {
+                if (popupController.Opened)
+                    popupController.idInputField.text = newItem.modelData.id.ToString();
+            });
             yield return new WaitForSeconds(0.1f); // Задержка между созданием элементов
         }
 
